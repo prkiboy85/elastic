@@ -3,4 +3,4 @@ eck-operator:
     enabled: false
   replicaCount: 1
   nodeSelector:
-    agentpool: elkstack
+    agentpool: agentpool

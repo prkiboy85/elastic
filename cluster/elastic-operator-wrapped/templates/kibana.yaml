@@ -13,7 +13,7 @@ spec:
   podTemplate:
     spec:
       nodeSelector:
-        agentpool: elkstack
+        agentpool: agentpool
       containers:
       - name: kibana
         readinessProbe:
