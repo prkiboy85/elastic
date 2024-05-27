@@ -52,7 +52,7 @@ spec:
             value: "true"
         resources:
           limits:
-            memory: 2Gi
+            memory: 1Gi
             cpu: 1
       priorityClassName: infrastructure-critical
       

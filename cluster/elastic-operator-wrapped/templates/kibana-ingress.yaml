@@ -9,9 +9,9 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 
 spec:
-  ingressClassName: internal
+  ingressClassName: nginx
   rules:
-    - host: api.prod.prod-grnry.azure.cloud.syncier.net
+    - host: elc.checkplatform.rs
       http:
         paths:
           - path: "/kibana(.*)"
@@ -21,7 +21,3 @@ spec:
                 name: quickstart-kb-http
                 port:
                   number: 5601
-  tls:
-    - hosts:
-        - api.prod.prod-grnry.azure.cloud.syncier.net
-      secretName: lets-encrypt-wildcard
