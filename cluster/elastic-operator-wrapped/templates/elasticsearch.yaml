@@ -17,10 +17,10 @@ spec:
         - name: elasticsearch
           resources:
             limits:
-              memory: 8Gi
+              memory: 4Gi
               cpu: 1
             requests:
-              memory: 4Gi
+              memory: 2Gi
               cpu: 1
           env:
           - name: ES_JAVA_OPTS
