@@ -20,11 +20,11 @@ spec:
               memory: 8Gi
               cpu: 1
             requests:
-              memory: 8Gi
+              memory: 4Gi
               cpu: 1
           env:
           - name: ES_JAVA_OPTS
-            value: "-Xms4g -Xmx4g"
+            value: "-Xms2g -Xmx2g"
         priorityClassName: infrastructure-critical
     config:
       node.store.allow_mmap: false
