@@ -280,5 +280,3 @@ elasticsearch:
                 field: source.ip
                 target_field: source.geo
                 database_file: false
-          index:
-          number_of_replicas: 0
