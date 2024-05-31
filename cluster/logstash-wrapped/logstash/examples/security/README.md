@@ -1,6 +1,6 @@
 # Security
 
-This example deploy Logstash 7.7.1 which connects to Elasticsearch using TLS
+This example deploy Logstash 8.5.1 which connects to Elasticsearch using TLS
 (see [values][]).
 
 
@@ -23,6 +23,6 @@ This example deploy Logstash 7.7.1 which connects to Elasticsearch using TLS
 You can also run [goss integration tests][] using `make test`
 
 
-[elasticsearch helm chart with security]: https://github.com/elastic/helm-charts/tree/master/elasticsearch/examples/security/
-[goss integration tests]: https://github.com/elastic/helm-charts/tree/master/logstash/examples/security/test/goss.yaml
-[values]: https://github.com/elastic/helm-charts/tree/master/logstash/examples/security/values.yaml
+[elasticsearch helm chart with security]: https://github.com/elastic/helm-charts/tree/main/elasticsearch/examples/security/
+[goss integration tests]: https://github.com/elastic/helm-charts/tree/main/logstash/examples/security/test/goss.yaml
+[values]: https://github.com/elastic/helm-charts/tree/main/logstash/examples/security/values.yaml
