@@ -2,7 +2,7 @@ port:
   tcp:5066:
     listening: true
     ip:
-    - '127.0.0.1'
+      - "127.0.0.1"
 
 mount:
   /usr/share/filebeat/data:
@@ -15,8 +15,11 @@ user:
     gid: 1000
 
 http:
-  http://elasticsearch-master:9200/_cat/indices:
+  https://elasticsearch-master:9200/_cat/indices:
+    allow-insecure: true
     status: 200
     timeout: 2000
+    username: "{{ .Env.ELASTICSEARCH_USERNAME }}"
+    password: "{{ .Env.ELASTICSEARCH_PASSWORD }}"
     body:
-      - 'filebeat-oss-8.2.2'
+      - "filebeat-oss-8.5.1"
