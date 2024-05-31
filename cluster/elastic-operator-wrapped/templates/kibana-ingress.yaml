@@ -11,10 +11,10 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: elc.checkplatform.rs
+    - host: elc.test.rs
       http:
         paths:
-          - path: "/kibanaa(.*)"
+          - path: "/kibana(.*)"
             pathType: Prefix
             backend:
               service:
