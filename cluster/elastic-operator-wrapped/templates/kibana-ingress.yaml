@@ -14,7 +14,7 @@ spec:
     - host: elc.checkplatform.rs
       http:
         paths:
-          - path: "/kibana(.*)"
+          - path: "/kibanaa(.*)"
             pathType: Prefix
             backend:
               service:
