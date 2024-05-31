@@ -59,8 +59,8 @@ daemonset:
   # A list of secrets and their paths to mount inside the pod
   # This is useful for mounting certificates for security other sensitive values
   secretMounts:
-    - name: elasticsearch-master-certs
-      secretName: elasticsearch-master-certs
+    # - name: elasticsearch-master-certs
+    #   secretName: elasticsearch-master-certs
       path: /usr/share/filebeat/certs/
   #  - name: filebeat-certificates
   #    secretName: filebeat-certificates
