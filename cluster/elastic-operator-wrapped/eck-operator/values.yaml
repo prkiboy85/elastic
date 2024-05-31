@@ -272,7 +272,7 @@ global:
 elasticsearch:
   nodeSets:
     - name: default
-      count: 2
+      count: 1
       configOverrides:
         elasticsearch.yml: |
           processors:
