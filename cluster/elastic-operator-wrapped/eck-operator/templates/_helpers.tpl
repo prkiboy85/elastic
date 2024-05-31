@@ -36,7 +36,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 Common labels
 */}}
 {{- define "eck-operator.labels" -}}
-{{ include "eck-operator.selectorLabels" . }}
+{{- include "eck-operator.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -48,7 +48,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Selector labels
 */}}
 {{- define "eck-operator.selectorLabels" -}}
-{{- if .Values.internal.manifestGen }}
+{{- if .Values.global.manifestGen }}
 control-plane: elastic-operator
 {{- else }}
 app.kubernetes.io/name: {{ include "eck-operator.name" . }}
@@ -71,8 +71,8 @@ Create the name of the service account to use
 Determine effective Kubernetes version
 */}}
 {{- define "eck-operator.effectiveKubeVersion" -}}
-{{- if .Values.internal.manifestGen -}}
-{{- semver .Values.internal.kubeVersion -}}
+{{- if .Values.global.manifestGen -}}
+{{- semver .Values.global.kubeVersion -}}
 {{- else -}}
 {{- .Capabilities.KubeVersion.Version -}}
 {{- end -}}
@@ -82,7 +82,7 @@ Determine effective Kubernetes version
 Determine the name for the webhook 
 */}}
 {{- define "eck-operator.webhookName" -}}
-{{- if .Values.internal.manifestGen -}}
+{{- if .Values.global.manifestGen -}}
 elastic-webhook.k8s.elastic.co
 {{- else -}}
 {{- $name := include "eck-operator.name" . -}}
@@ -94,7 +94,7 @@ elastic-webhook.k8s.elastic.co
 Determine the name for the webhook secret 
 */}}
 {{- define "eck-operator.webhookSecretName" -}}
-{{- if .Values.internal.manifestGen -}}
+{{- if .Values.global.manifestGen -}}
 elastic-webhook-server-cert
 {{- else -}}
 {{- $name := include "eck-operator.name" . -}}
@@ -106,7 +106,7 @@ elastic-webhook-server-cert
 Determine the name for the webhook service 
 */}}
 {{- define "eck-operator.webhookServiceName" -}}
-{{- if .Values.internal.manifestGen -}}
+{{- if .Values.global.manifestGen -}}
 elastic-webhook-server
 {{- else -}}
 {{- $name := include "eck-operator.name" . -}}
@@ -115,43 +115,9 @@ elastic-webhook-server
 {{- end -}}
 
 {{/*
-Add the webhook sideEffects field on supported Kubernetes versions
-*/}}
-{{- define "eck-operator.webhookSideEffects" -}}
-{{- $kubeVersion := (include "eck-operator.effectiveKubeVersion" .) -}}
-{{- $kubeVersionSupported := semverCompare ">=1.13.0-0" $kubeVersion -}}
-{{- if $kubeVersionSupported }}
-sideEffects: "None"
-{{- end }}
-{{- end }}
-
-{{/*
-Use v1 of ValidatingWebhookConfiguration on supported Kubernetes versions
-*/}}
-{{- define "eck-operator.webhookAPIVersion" -}}
-{{- $kubeVersion := (include "eck-operator.effectiveKubeVersion" .) -}}
-{{- $kubeVersionSupported := semverCompare ">=1.16.0-0" $kubeVersion -}}
-{{- if $kubeVersionSupported -}}
-admissionregistration.k8s.io/v1
-{{- else -}}
-admissionregistration.k8s.io/v1beta1
-{{- end -}}
-{{- end }}
-
-
-{{/*
-Define admissionReviewVersions based on Kubernetes version
-*/}}
-{{- define "eck-operator.webhookAdmissionReviewVersions" -}}
-{{- $kubeVersion := (include "eck-operator.effectiveKubeVersion" .) -}}
-{{- $kubeVersionSupported := semverCompare ">=1.16.0-0" $kubeVersion -}}
-{{- if $kubeVersionSupported  }}
-admissionReviewVersions: [v1beta1]
-{{- end }}
-{{- end }}
-
-{{/*
 RBAC permissions
+NOTE - any changes made to RBAC permissions below require
+updating docs/operating-eck/eck-permissions.asciidoc file.
 */}}
 {{- define "eck-operator.rbacRules" -}}
 - apiGroups:
@@ -161,16 +127,38 @@ RBAC permissions
   verbs:
   - create
 - apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  resourceNames:
+  - elastic-operator-leader
+  verbs:
+  - get
+  - watch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - ""
   resources:
   - pods
-  - endpoints
   - events
   - persistentvolumeclaims
   - secrets
   - services
   - configmaps
-  - serviceaccounts
   verbs:
   - get
   - list
@@ -211,8 +199,6 @@ RBAC permissions
   - elasticsearches
   - elasticsearches/status
   - elasticsearches/finalizers # needed for ownerReferences with blockOwnerDeletion on OCP
-  - enterpriselicenses
-  - enterpriselicenses/status
   verbs:
   - get
   - list
@@ -220,7 +206,19 @@ RBAC permissions
   - create
   - update
   - patch
-  - delete
+- apiGroups:
+  - autoscaling.k8s.elastic.co
+  resources:
+  - elasticsearchautoscalers
+  - elasticsearchautoscalers/status
+  - elasticsearchautoscalers/finalizers # needed for ownerReferences with blockOwnerDeletion on OCP
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
 - apiGroups:
   - kibana.k8s.elastic.co
   resources:
@@ -234,7 +232,6 @@ RBAC permissions
   - create
   - update
   - patch
-  - delete
 - apiGroups:
   - apm.k8s.elastic.co
   resources:
@@ -248,7 +245,6 @@ RBAC permissions
   - create
   - update
   - patch
-  - delete
 - apiGroups:
   - enterprisesearch.k8s.elastic.co
   resources:
@@ -262,7 +258,6 @@ RBAC permissions
   - create
   - update
   - patch
-  - delete
 - apiGroups:
   - beat.k8s.elastic.co
   resources:
@@ -276,7 +271,6 @@ RBAC permissions
   - create
   - update
   - patch
-  - delete
 - apiGroups:
   - agent.k8s.elastic.co
   resources:
@@ -290,7 +284,45 @@ RBAC permissions
   - create
   - update
   - patch
-  - delete
+- apiGroups:
+  - maps.k8s.elastic.co
+  resources:
+  - elasticmapsservers
+  - elasticmapsservers/status
+  - elasticmapsservers/finalizers # needed for ownerReferences with blockOwnerDeletion on OCP
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+- apiGroups:
+  - stackconfigpolicy.k8s.elastic.co
+  resources:
+  - stackconfigpolicies
+  - stackconfigpolicies/status
+  - stackconfigpolicies/finalizers # needed for ownerReferences with blockOwnerDeletion on OCP
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+- apiGroups:
+  - logstash.k8s.elastic.co
+  resources:
+  - logstashes
+  - logstashes/status
+  - logstashes/finalizers # needed for ownerReferences with blockOwnerDeletion on OCP
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
 {{- end -}}
 
 {{/*
@@ -308,7 +340,6 @@ RBAC permissions on non-namespaced resources
 - apiGroups:
   - admissionregistration.k8s.io
   resources:
-  - mutatingwebhookconfigurations
   - validatingwebhookconfigurations
   verbs:
   - get
@@ -318,4 +349,18 @@ RBAC permissions on non-namespaced resources
   - update
   - patch
   - delete
+{{- end -}}
+
+{{/*
+RBAC permissions to read node labels
+*/}}
+{{- define "eck-operator.readNodeLabelsRbacRule" -}}
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
 {{- end -}}

@@ -1,3 +1,4 @@
+{{- $metricsPort := int .Values.config.metricsPort -}}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -24,9 +25,15 @@ spec:
         {{- end }}
       labels:
         {{- include "eck-operator.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       terminationGracePeriodSeconds: 10
       serviceAccountName: {{ include "eck-operator.serviceAccountName" . }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -42,7 +49,6 @@ spec:
           args:
             - "manager"
             - "--config=/conf/eck.yaml"
-            - "--distribution-channel={{ .Values.telemetry.distributionChannel }}"
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -60,8 +66,8 @@ spec:
             - name: WEBHOOK_SECRET
               value: {{ include "eck-operator.webhookSecretName" . }}
             {{- end }}
-            {{- if .Values.env }}
-              {{- toYaml .Values.env | nindent 12 }}
+            {{- with .Values.env }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
             {{- if .Values.tracing.enabled -}}
             {{- range $name, $value :=  .Values.tracing.config }}
@@ -73,11 +79,18 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.webhook.enabled }}
+          {{- if or (gt $metricsPort 0) .Values.webhook.enabled }}
           ports:
-            - containerPort: 9443
+            {{- if (gt $metricsPort 0) }}
+            - containerPort: {{ .Values.config.metricsPort }}
+              name: metrics
+              protocol: TCP
+            {{- end }}
+            {{- if .Values.webhook.enabled }}
+            - containerPort: {{ .Values.webhook.port }}
               name: https-webhook
               protocol: TCP
+            {{- end }}  
           {{- end }}
           volumeMounts:
             - mountPath: "/conf"
@@ -87,6 +100,9 @@ spec:
             - mountPath: {{ .Values.webhook.certsDir }}
               name: cert
               readOnly: true
+            {{- end }}
+            {{- with .Values.volumeMounts }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
       volumes:
         - name: conf
@@ -98,15 +114,22 @@ spec:
             defaultMode: 420
             secretName: {{ include "eck-operator.webhookSecretName" . }}
         {{- end }}
+        {{- with .Values.volumes }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- if .Values.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 12 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 12 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 12 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
